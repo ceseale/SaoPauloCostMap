@@ -16,6 +16,7 @@
     "method-override": "~1.0.0",
     "morgan": "~1.0.0",
     "node-edmunds-api": "0.0.0",
+    "osrm": "^4.7.1",
     "osrm-isochrone": "^1.0.1",
     "polyline": "^0.2.0",
     "serve-favicon": "~2.0.1"
