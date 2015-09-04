@@ -3,12 +3,12 @@
  */
 
 'use strict';
-
+var express = require('express'); 
 var errors = require('./components/errors');
 var path = require('path');
 
 module.exports = function(app) {
-
+  app.use(express.static(__dirname + '/static'));
   // Insert routes below
   app.use('/api/osms', require('./api/osm'));
   app.use('/api/things', require('./api/thing'));
