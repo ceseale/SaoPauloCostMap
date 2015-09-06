@@ -3,7 +3,49 @@
 angular.module('costlymapApp')
   .controller('MainCtrl', function($scope, $http, $timeout, $mdToast) {
     $scope.awesomeThings = [];
-    $scope.cost = 0;
+
+
+ $scope.userModel = '';
+        $scope.models = [{name :'Honda'},{name :'BMW'}];
+
+
+    var car = {
+	 type: "Car" 
+    , cost : 0 
+    , speed : 70 
+    , model :''
+    , cpm : 0 
+    , tags: [{ name :'Longest Trip' , val :"134.43ml" },
+     {name: "er Mile", val :  "$0.35"  }] 
+    , more : []
+}
+$scope.okayR = true ;
+$scope.okayMin = true ;
+$scope.okayMax = true ;
+
+$scope.$watch('cost',function (cost){
+	if(cost < 1){
+
+		$scope.okayMin = false ;
+
+	} else if (cost > 300){
+
+		$scope.okayMax = false ; 
+
+	} else if ( cost === undefined ){
+
+		$scope.okayR = false ;
+	} else {
+		$scope.okayR = $scope.okayMin = $scope.okayMax = true ;
+	}
+})
+
+    $scope.bus = { type: "Bus" , cost : 0 , speed : 24 , model : "None" , cpm : 0 }
+    $scope.bike = { type: "Bike" , cost : 0 , speed : 15 , model : "None" , cpm : 0 }
+
+
+    $scope.current = car;
+    console.log($scope.current.tags[0].val)
 
   $scope.toastPosition = {
     bottom: false,
@@ -31,15 +73,6 @@ angular.module('costlymapApp')
 }
 
  
-
-
- $scope.userModel = '';
-        $scope.models = [{name :'Honda'},{name :'BMW'}];
-
-$scope.myFunction = function (data){
-	console.log(data)
-}
-
   // Define a function we will use to generate contours.
   function makeContour(data, layer) {
     /* There are two example data sets.  One has a position array which

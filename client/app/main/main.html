@@ -1,26 +1,65 @@
 
 
- <md-whiteframe id="dashboard" class="md-whiteframe-z1" >
+ <md-whiteframe  class="md-whiteframe-z3" id="dashboard" class="md-whiteframe-z1" >
  <h1>Differnce Machine</h1>
-      <md-button ng-click="myFunction('me')"class="md-primary" disabled="true">Car</md-button>
+      <md-button ng-click="myFunction('me')"class="md-raised md-primary" disabled="false">Car</md-button>
       <md-button ng-click="showSimpleToast()" class="md-raised md-primary">Bus</md-button>
+      <md-button ng-click="showSimpleToast()" class="md-raised md-primary">Bike</md-button>
+  <md-input-container id="cost">
+        <label>One-Way Trip Cost (USD)</label>
+        <input required type="number" step="any" name="rate" ng-model="cost" min="1" max="300">
+        <div  ng-messages="projectForm.rate.$error">
+          <div ng-hide="okayR" ng-message="required">Can't get too far with nothing ...</div>
+          <div ng-hide="okayMin" ng-message="min">The nearest seat...</div>
+          <div ng-hide="okayMax" ng-message="max">You can get any where in Brazil with that much!!</div>
+        </div>
+      </md-input-container>
 
-    <md-input-container aria="cost">
-      <input ng-model="cost">
-    </md-input-container>
 
-    <div>
-    <h1 class="md-title">Enter a car Model</h1>
-    <div layout="row">
-      <md-input-container>
-        <label>Model</label>
+
+    <div flex="50" flex-md="100" layout="column">
+      <fieldset class="standard" flex>
+        <legend> {{current.type}} Options </legend>
+        <div layout="row" layout-wrap>
+
+
+          <div flex="45" >
+
+      <label>Model</label>
         <md-select ng-model="userModel">
           <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
         </md-select>
-      </md-input-container>
+
+
+          </div>
+
+         <div flex="45" >
+
+      <label>Model</label>
+        <md-select ng-model="userModel">
+          <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
+        </md-select>
+
+
+          </div>
+
+                   <div flex="45" >
+
+      <label>Model</label>
+        <md-select ng-model="userModel">
+          <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
+        </md-select>
+
+
+          </div>
+
+        </div>
+      </fieldset>
     </div>
-  </div>
   </md-whiteframe>
 
 
+
  <div id="map"></div>
+ </md-progress-circular>
+    <md-progress-circular id="loading" md-mode="indeterminate" md-diameter="96"></md-progress-circular>
