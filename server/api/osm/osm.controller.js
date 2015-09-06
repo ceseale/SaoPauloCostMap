@@ -6,15 +6,19 @@
 'use strict';
 var isochrone = require('osrm-isochrone');
 // Gets a list of Osms 
-   
+
+
+
+
+
 exports.index = function(req, res) {
 var resolution = 25; // sample resolution
 var network = "null" ; 
 var time = 3600; // 300 second drivetime (5 minutes)
-var location = [-46.648171 ,-23.539278 ]; // center point
+var location = [req.body.coordinate.x ,req.body.coordinate.y ]; // center point
 var out = [];
 var cal = [300,900,900,1200,1500];
-
+console.log(req.body)
 // cal.forEach(function (item , i ){
 // 	if(i == 0){
 // 	isochrone(location, cal[i], resolution,  network  , function(err, drivetime) {
@@ -23,9 +27,9 @@ var cal = [300,900,900,1200,1500];
 // });
 // }
 // })   
-       
- 
-isochrone(location, cal[1], resolution, network , function(err, drivetime) {
+        
+    
+isochrone(location, 900, resolution, network , function(err, drivetime) {
   if(err) throw err;
   out.push((drivetime))
   // a geojson linestring
