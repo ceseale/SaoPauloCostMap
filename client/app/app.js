@@ -5,7 +5,8 @@ angular.module('costlymapApp', [
   'ngResource',
   'ngSanitize',
   'ngRoute',
-  'ui.bootstrap'
+  'ui.bootstrap',
+    'ngMaterial'
 ])
   .config(function($routeProvider, $locationProvider) {
     $routeProvider
