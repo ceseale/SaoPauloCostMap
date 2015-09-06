@@ -1,12 +1,22 @@
 #map {  
-     z-index: 0;
-    display: block;
+
+    z-index: 0;
+    /*display: block;*/
     position:absolute;
-    height:auto;
+    width: 74%;
     bottom:0;
     top:0;
-    left:0;
+    left:26%;
     right:0;
 
       }
 
+      #dashboard{
+        z-index: 10;
+        position: absolute;
+        top:10%;
+        width: 24%;
+        height:80%;
+        left:1%;
+        opacity: 1;
+      }

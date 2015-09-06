@@ -1,28 +1,50 @@
 'use strict';
 
 angular.module('costlymapApp')
-  .controller('MainCtrl', function($scope, $http) {
+  .controller('MainCtrl', function($scope, $http, $timeout, $mdToast) {
     $scope.awesomeThings = [];
+    $scope.cost = 0;
 
-    //   var map = L.map('map').setView([-23.539278, -46.648171  ], 10);
+  $scope.toastPosition = {
+    bottom: false,
+    top: true,
+    left: false,
+    right: true
+  };
 
 
-    // L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    //     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    // }).addTo(map);
 
+  $scope.getToastPosition = function() {
+    return Object.keys($scope.toastPosition)
+      .filter(function(pos) { return $scope.toastPosition[pos]; })
+      .join(' ');
+  };
+
+
+ $scope.showSimpleToast = function() {
+    $mdToast.show(
+      $mdToast.simple()
+        .content('Simple Toast!')
+        .position($scope.getToastPosition())
+        .hideDelay(3000)
+    );
+}
+
+ 
+
+
+ $scope.userModel = '';
+        $scope.models = [{name :'Honda'},{name :'BMW'}];
+
+$scope.myFunction = function (data){
+	console.log(data)
+}
 
   // Define a function we will use to generate contours.
   function makeContour(data, layer) {
-
-
     /* There are two example data sets.  One has a position array which
      * consists of objects each with x, y, z values.  The other has a values
      * array which just has our contour values. */
-
-
-
-
     var contour = layer.createFeature('contour')
       .data(data.position || data.values)
       .style({
@@ -32,7 +54,8 @@ angular.module('costlymapApp')
         gridWidth: data.gridWidth,
         gridHeight: data.gridHeight,
         stepped: true,
-         rangeValues: [0,-1,5],
+        min: 0
+
         /* The color range doesn't have to be linear:
         rangeValues: [0, 25, 50, 75, 100, 125, 250, 500, 750, 2000],
          */
@@ -43,7 +66,7 @@ angular.module('costlymapApp')
         /* You can make smooth contours instead of stepped contours:
         stepped: false,
          */
-        min: 0
+
       });
     if (data.position) {
       contour
@@ -69,12 +92,10 @@ angular.module('costlymapApp')
     return contour;
   }  
 
-  // Create a map object with the OpenStreetMaps base layer.
+  // Create a map object with the OpenStreetMaps base layer centered in Sao Paulo 
   var map = geo.map({
     node: '#map',
     center: {
-    	 //   x: -157.965,
-      // y: 21.482
       x:  -46.648171,
       y: -23.539278
     },
@@ -86,7 +107,7 @@ angular.module('costlymapApp')
     'osm'
   );
 
-  // Create a gl feature layer
+  // Create a gl feature layer for cost contours
   var vglLayer = map.createLayer(
     'feature',
     {
@@ -96,71 +117,49 @@ angular.module('costlymapApp')
  
 
 
+// console.log(map.interactor()._disconnectEvents())
 
+ var layer = map.createLayer('feature', {'renderer' : 'd3'});
 
+function getPolygons(coordinate){
+	vglLayer.clear()
 
-  // $.ajax({
-  //   url: 'data/data.json',
-  //   success: function (data) {
-  //   	console.log(data)
+	$http.post('/api/osms', {coordinate: coordinate }).then(function(response) {
 
-  //     var contour = makeContour(data, vglLayer);
-  //     // Draw the map
-  //     map.draw();
-  //     /* After 10 second, load a denser data set */
-  //     window.setTimeout(function () {
-  //       $.ajax({
-  //         url: 'data_dense.json',
-  //         success: function (data) {
-  //           vglLayer.deleteFeature(contour);
-  //           contour = makeContour(data, vglLayer, contour);
-  //           map.draw();
-  //         }
-  //       });
-  //     }, 10000);
-  //   },
-  //   error: function (error){
-  //   	console.log(JSON.parse(error.responseText))
-  //   }
+	    var data = (response.data[0]);
+		console.log(vglLayer.visible() )
+	    var contour = makeContour(data, vglLayer);
+	  	map.draw();
 
-
-
-
-  // });
-
-
-//     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-//         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-//     }).addTo(map);
-
-//     L.marker([-23.539278, -46.648171 ]).addTo(map)
-//         .bindPopup('Current point of interest!')
-//         .openPopup();
-// var myStyle = {
-// 	"stroke-linejoin" :"round",
-//     fill: "#ff7800",
-//     "opacity": 1
-// };
-console.log(data.position.length)
-
-
-
-    $http.get('/api/osms').then(function(response) {
-    var data = (response.data[0]);
-
-
-console.log(vglLayer.visible() )
- 
-        var contour = makeContour(data, vglLayer);
-  		map.draw();
-
-
-vglLayer.clear()
-
-		  //       var contour = makeContour(data, vglLayer);
-  		// map.draw();
     });
+}
 
 
+  // Legend Creation
+  var ui = map.createLayer('ui');
+      ui.createWidget('slider');
+
+vglLayer.geoOn(geo.event.mouseclick,function (data){
+	console.log(data)
+
+
+    $scope.currentPoint = [{
+      x:  data.geo.x,
+      y: data.geo.y
+    }]
+ 	
+ 	getPolygons({
+      x:  data.geo.x,
+      y: data.geo.y
+    })
+
+    var dot = layer.createFeature('point')
+    .data($scope.currentPoint)
+    .style('radius', 5)
+    .style('fillColor', function () { return 'red'; })
+    .position(function (d) { return d; });
+
+})
+ console.log(map)
 
   });

@@ -1,1 +1,26 @@
-<div id="map"></div>
+
+
+ <md-whiteframe id="dashboard" class="md-whiteframe-z1" >
+ <h1>Differnce Machine</h1>
+      <md-button ng-click="myFunction('me')"class="md-primary" disabled="true">Car</md-button>
+      <md-button ng-click="showSimpleToast()" class="md-raised md-primary">Bus</md-button>
+
+    <md-input-container aria="cost">
+      <input ng-model="cost">
+    </md-input-container>
+
+    <div>
+    <h1 class="md-title">Enter a car Model</h1>
+    <div layout="row">
+      <md-input-container>
+        <label>Model</label>
+        <md-select ng-model="userModel">
+          <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
+        </md-select>
+      </md-input-container>
+    </div>
+  </div>
+  </md-whiteframe>
+
+
+ <div id="map"></div>
