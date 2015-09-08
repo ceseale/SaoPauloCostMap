@@ -281,6 +281,7 @@ $scope.reCal = function (){
 	    });
 
 	} else {
+		$scope.loading = false;
 		if($scope.cost > 8 ){
 		$scope.showAlert(undefined,'The cost value you entered too high', 'High Alert')
 	    }
