@@ -74,13 +74,13 @@ angular.module('costlymapApp')
 
 
   $scope.status = '  ';
-  $scope.showAlert = function(ev) {
+  $scope.showAlert = function(ev, text, title ) {
 
     $mdDialog.show(
       $mdDialog.alert()
         .clickOutsideToClose(true)
-        .title('How This Works?')
-        .content('This Web App uses combines real time traffic data from IBEG, bus data from BRTData.org, local gas prices from myGasFeed.com, and vehicle data from Edmunds Api, and Open Street Maps to calculate the Financial assessability of São Paulo\'s transportation network. You can select your car options and compare the financial accessibility of your area for cars and buses. To interact with the map click a location in Sao Paulo to how far you can get with the money threshold you’ve selected. ')
+        .title(title || 'How This Works?')
+        .content( text ||'This Web App uses combines real time traffic data from IBEG, bus data from BRTData.org, local gas prices from myGasFeed.com, and vehicle data from Edmunds Api, and Open Street Maps to calculate the Financial assessability of São Paulo\'s transportation network. You can select your car options and compare the financial accessibility of your area for cars and buses. To interact with the map click a location in Sao Paulo to how far you can get with the money threshold you’ve selected. ')
         .ariaLabel('Alert Dialog Demo')
         .ok('Got it!')
         .targetEvent(ev)
@@ -281,7 +281,12 @@ $scope.reCal = function (){
 	    });
 
 	} else {
-
+		if($scope.cost > 8 ){
+		$scope.showAlert(undefined,'The cost value you entered too high', 'High Alert')
+	    }
+        if($scope.cost < 1){ 
+		$scope.showAlert(undefined,'The cost value you entered too low', 'Low Alert')
+	   }
 	}
 }
 
@@ -301,10 +306,11 @@ $scope.reCal = function (){
 $scope.$watch('cost',function (cost){
 
 // ["#006837", "#39B54A", "#8CC63F", "#F7931E", "#F15A24", "#C1272D"]
-	if(cost <= 1 ){
+	if(cost < 1 ){
 		$scope.okayMin = false;
 		$scope.okayMax = true;
 		$scope.okayReq = true;
+
 	} else if ( cost > 8 ){
 		$scope.okayMin = true;
 		$scope.okayMax = false;
