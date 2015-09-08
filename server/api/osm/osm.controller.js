@@ -17,7 +17,12 @@
     var osrm = new OSRM(network); 
 
 
-   function getPolygons(center, time, resolution, network, done) {
+   var EdmundsClient = require('node-edmunds-api');
+   var client = new EdmundsClient({ apiKey:  'hamkxagh9shf9twh6tq6xxy4' });
+
+
+
+   function getPolygons(center, time, resolution, network, carData , maxCost, done) {
 
     // compute bbox
     // bbox should go out 1.4 miles in each direction for each minute
@@ -25,7 +30,10 @@
 
     var centerPt = point([center[0], center[1]]);
     var spokes = featureCollection([])
-    var miles = (time/60) /2; // assume 70mph max speed
+    var miles = (time/60)/1.4 ; // assume 70mph max speed
+    if(carData.bus){
+      var miles = (time/60)/2.2
+    }
     spokes.features.push(destination(centerPt, miles, 180, 'miles'));
     spokes.features.push(destination(centerPt, miles, 0, 'miles'));
     spokes.features.push(destination(centerPt, miles, 90, 'miles'));
@@ -84,24 +92,24 @@
                    
 
 
-                    if (res.route_summary.total_time <= 400){
+                    if (getTripCost(res.route_summary.total_distance, carData, res.route_summary.total_time) <= ((maxCost/5.0)*1)  ){
                     
                         gridData.push({x: query.coordinates[1][1],
                      y:  query.coordinates[1][0],
                       z:5 })
 
 
-                    } else if (res.route_summary.total_time <= 600){
+                    } else if (getTripCost(res.route_summary.total_distance, carData, res.route_summary.total_time)  <= ((maxCost/5.0)*2) ){
                                gridData.push({x: query.coordinates[1][1],
                      y:  query.coordinates[1][0],
                       z:4 })
 
-                    }else if (res.route_summary.total_time <= 800){
+                    }else if (getTripCost(res.route_summary.total_distance, carData, res.route_summary.total_time)<= ((maxCost/5.0)*3) ){
                                gridData.push({x: query.coordinates[1][1],
                      y:  query.coordinates[1][0],
                       z:3 })
 
-                    }else if (res.route_summary.total_time <= 1000){
+                    }else if (getTripCost(res.route_summary.total_distance, carData, res.route_summary.total_time) <= ((maxCost/5.0)*4) ){
                                gridData.push({x: query.coordinates[1][1],
                      y:  query.coordinates[1][0],
                       z:2 })
@@ -162,6 +170,38 @@ function decode (res) {
 }
 
 
+function getTripCost(length, carData, time){
+  //cpg =: cost per gallon 
+ 
+ if(carData.bus){
+var threshold = 60 * 15; 
+
+
+  var t_cost = (time/ threshold) * 1.12;
+
+ } else {
+  var cpg = 1/0.264172 * 0.89;
+  var com_mpg = +carData["Epa Combined Mpg"] * 1609.34; // TODO: change to meters per gallon 
+  var city_mpg = +carData["Epa City Mpg"] * 1609.34;
+  var high_mpg = +carData["Epa Highway Mpg"] * 1609.34;
+  var t_cost = 0;
+  if(com_mpg){
+    t_cost = cpg * (length /com_mpg);
+  } else if(city_mpg){
+    t_cost = cpg * (length /city_mpg);
+  } else {
+    t_cost = 25 * (length /city_mpg);
+  }
+
+
+
+}
+
+
+  return t_cost
+
+}
+
 exports.index = function(req, res) {
 var resolution = 25; // sample resolution
 var network = "null" ; 
@@ -169,11 +209,35 @@ var time = 3600; // 300 second drivetime (5 minutes)
 var location = [req.body.coordinate.x ,req.body.coordinate.y ]; // center point
 var out = [];
 var cal = [300,900,900,1200,1500];
-console.log(req.body)
+var fuelData ;
+var maxCost = req.body.cost; 
+// assumung 40mpg
+var time = ((30 * (maxCost / (1/0.264172 * 0.86))) / 60) *60 *60 ;
 
-        
-    console.log(location)
-getPolygons(location, 900, resolution, network , function(err, drivetime) {
+
+if(!req.body.bus){
+
+    client.getEquipmentDetailsByStyle({styleId : req.body.id }, function (err, data){
+   var carInfo = data.equipment.filter(function (eData){
+      return eData.name === 'Specifications' || eData.name ===  'Engine';
+   })
+
+   fuelData = carInfo.reduce(function (dataOb, item){
+    if(item.name === 'Specifications'){
+      item.attributes.filter(function (attr){
+        return attr.name === "Epa Combined Mpg" || attr.name === "Epa City Mpg" || attr.name === "Epa Highway Mpg"
+      }).forEach(function (attr){
+        dataOb[attr.name] = attr.value ;
+      })
+    } else {
+      dataOb["fuelType"] = item["fuelType"]
+    }
+    return dataOb;
+
+   }, {})
+
+
+getPolygons(location, 3000, resolution, network , fuelData, maxCost, function(err, drivetime) {
   if(err) throw err;
   out.push((drivetime))
   // a geojson linestring
@@ -181,12 +245,101 @@ getPolygons(location, 900, resolution, network , function(err, drivetime) {
   //res.end('end')
 });
 
+
+
+  })
+
+        
+} else {
+  fuelData = {bus: true }
+
+  getPolygons(location, 3000, resolution, network , fuelData, maxCost, function(err, drivetime) {
+  if(err) throw err;
+  out.push((drivetime))
+  // a geojson linestring
+  res.send(JSON.stringify(out))
+  //res.end('end')
+});
+
+
+}
+
+
+
+
 };
 
 
-  // var EdmundsClient = require('node-edmunds-api');
-  // var client = new EdmundsClient({ apiKey:  });
-  // console.log(client.getAllMakes({}, function (err, res){
-  // 	console.log(res)
-  // }))
+exports.getMakes = function (req, res){
+
+
+
+  client.getAllMakes({}, function (err, data){
+    res.send(JSON.stringify(data))
+   //  client.getEquipmentDetailsByStyle({styleId : 101384830 }, function (err, res){
+   // var carInfo = res.equipment.filter(function (eData){
+   //    return eData.name === 'Specifications' || eData.name ===  'Engine';
+   // })
+
+   // var fuelData = carInfo.reduce(function (dataOb, item){
+   //  if(item.name === 'Specifications'){
+   //    item.attributes.filter(function (attr){
+   //      return attr.name === "Epa Combined Mpg" || attr.name === "Epa City Mpg" || attr.name === "Epa Highway Mpg"
+   //    }).forEach(function (attr){
+   //      dataOb[attr.name] = attr.value ;
+   //    })
+   //  } else {
+   //    dataOb["fuelType"] = item["fuelType"]
+   //  }
+   //  return dataOb;
+
+   // }, {})
+
+   // console.log(fuelData)
+
+  })
+
+
+}
+
+exports.getCars = function (req, res){
+
+  var car = req.body;
+  console.log(car)
+   client.getModelDetails( car , function (err, data){
+    res.send(JSON.stringify(data));
+
+   })
+
+}
+
+
+
+
+
+  //   client.getEquipmentDetailsByStyle({styleId : 200721614 }, function (err, res){
+  //  var carInfo = res.equipment.filter(function (eData){
+  //     return eData.name === 'Specifications' || eData.name ===  'Engine';
+  //  })
+
+  //  var fuelData = carInfo.reduce(function (dataOb, item){
+  //   if(item.name === 'Specifications'){
+  //     item.attributes.filter(function (attr){
+  //       return attr.name === "Epa Combined Mpg" || attr.name === "Epa City Mpg" || attr.name === "Epa Highway Mpg"
+  //     }).forEach(function (attr){
+  //       dataOb[attr.name] = attr.value ;
+  //     })
+  //   } else {
+  //     dataOb["fuelType"] = item["fuelType"]
+  //   }
+  //   return dataOb;
+
+  //  }, {})
+
+  //  console.log(fuelData)
+
+  // })
+
+
+
 
