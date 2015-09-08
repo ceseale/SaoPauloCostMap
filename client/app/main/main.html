@@ -1,65 +1,97 @@
 
 
  <md-whiteframe  class="md-whiteframe-z3" id="dashboard" class="md-whiteframe-z1" >
- <h1>Differnce Machine</h1>
-      <md-button ng-click="myFunction('me')"class="md-raised md-primary" disabled="false">Car</md-button>
-      <md-button ng-click="showSimpleToast()" class="md-raised md-primary">Bus</md-button>
-      <md-button ng-click="showSimpleToast()" class="md-raised md-primary">Bike</md-button>
+ <h3>Sao Paulo Cost Machine</h3>
+      <md-button ng-click="selectCar()"class="md-raised md-primary" ng-disabled="carSelected">Car</md-button>
+      <md-button ng-click="selectBus()" ng-disabled="busSelected" class="md-raised md-primary">Bus</md-button>
+
+
+
   <md-input-container id="cost">
         <label>One-Way Trip Cost (USD)</label>
-        <input required type="number" step="any" name="rate" ng-model="cost" min="1" max="300">
+        <input required type="number" step=".01" name="rate" ng-model="cost">
         <div  ng-messages="projectForm.rate.$error">
-          <div ng-hide="okayR" ng-message="required">Can't get too far with nothing ...</div>
-          <div ng-hide="okayMin" ng-message="min">The nearest seat...</div>
-          <div ng-hide="okayMax" ng-message="max">You can get any where in Brazil with that much!!</div>
+          <div ng-hide="okayReq" ng-message="required">Can't get too far with nothing ...</div>
+          <div ng-hide="okayMin" ng-message="min">Can't get too far with nothing ...</div>
+          <div ng-hide="okayMax" ng-message="max">With ${{cost}} you can leave the city!!</div>
         </div>
       </md-input-container>
 
 
 
-    <div flex="50" flex-md="100" layout="column">
-      <fieldset class="standard" flex>
+
+    <div   class="box" flex="50" flex-md="100" layout="column">
+      <fieldset ng-hide="busSelected" class="standard" flex>
         <legend> {{current.type}} Options </legend>
         <div layout="row" layout-wrap>
 
 
-          <div flex="45" >
+          <div flex="50" >
 
-      <label>Model</label>
-        <md-select ng-model="userModel">
+      <label>Vehicle Make</label>
+        <md-select ng-model="userCar.make">
+          <md-option ng-repeat="make in makes">{{make.name}}</md-option>
+        </md-select>
+
+
+          </div>
+
+         <div flex="50" >
+        <md-tooltip ng-hide="userCar.make">
+          You need to select a Car Make First!
+        </md-tooltip>
+      <label>Vehicle Model</label>
+        <md-select ng-disabled="!userCar.make" ng-model="userCar.model">
+
           <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
         </md-select>
 
 
           </div>
 
-         <div flex="45" >
-
-      <label>Model</label>
-        <md-select ng-model="userModel">
-          <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
+                   <div flex="50" >
+        <md-tooltip ng-hide="userCar.model">
+          You need to select a Car Model First!
+        </md-tooltip>
+      <label>Vehicle Year</label>
+        <md-select  ng-disabled="!userCar.model" ng-model="userCar.year">
+          <md-option ng-repeat="year in years" value="{{year.year}}">{{year.year}}</md-option>
         </md-select>
+</div>
 
-
+    <div flex="50" >
+        <md-tooltip ng-hide="userCar.year">
+          You need to select a Car Year First!
+        </md-tooltip>
+           <label>Vehicle Style</label>
+        <md-select ng-disable="!userCar.year" ng-model="userCar.style" md-on-open="getCars()">
+          <md-option ng-repeat="style in styles" value="{{style.name}}">{{style.name | limitTo : '32'}}...</md-option>
+        </md-select>
           </div>
 
-                   <div flex="45" >
-
-      <label>Model</label>
-        <md-select ng-model="userModel">
-          <md-option ng-repeat="model in models" value="{{model.name}}">{{model.name}}</md-option>
-        </md-select>
-
-
-          </div>
 
         </div>
+
+
+
       </fieldset>
+
+
+        <md-button ng-click="reCal()"class="md-raised md-primary" ng-disabled="disableRecal">Recalculate Distance Costs</md-button>
+
+
+        <md-button ng-click="showAlert()"class="md-raised md-primary" >How this Works</md-button>
     </div>
+
+
+
+
+
+
   </md-whiteframe>
 
 
 
  <div id="map"></div>
- </md-progress-circular>
-    <md-progress-circular id="loading" md-mode="indeterminate" md-diameter="96"></md-progress-circular>
+
+    <md-progress-circular ng-show="loading" id="loading" md-mode="indeterminate" ></md-progress-circular>

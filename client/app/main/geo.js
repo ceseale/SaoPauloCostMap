@@ -26032,6 +26032,8 @@ geo.d3.d3Renderer = function (arg) {
 
       canvas.attr('class', 'group-' + m_this._d3id());
 
+
+
       m_this.canvas(canvas);
     }
   };
@@ -26200,6 +26202,7 @@ geo.d3.d3Renderer = function (arg) {
         classes = m_features[id].classes,
         append = m_features[id].append,
         selection = m_this.select(id).data(data, index);
+
     selection.enter().append(append);
     selection.exit().remove();
     setAttrs(selection, attributes);

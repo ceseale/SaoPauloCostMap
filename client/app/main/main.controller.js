@@ -1,12 +1,106 @@
-'use strict';
+
 
 angular.module('costlymapApp')
-  .controller('MainCtrl', function($scope, $http, $timeout, $mdToast) {
+  .controller('MainCtrl', function($scope, $http, $timeout, $mdToast, $mdDialog) {
     $scope.awesomeThings = [];
 
+		$scope.loading = false;
+        $scope.userCar = {};
+ 		$scope.makes = [];
+        $scope.models = [];
+        $scope.years = [];
+        $scope.cost = 2.54;
+        $scope.disableRecal = false ;
+        $scope.carSelected = true ;
+		$scope.disableRecal = true ;
+		$scope.busSelected = false ;
+        var carId = 11937;
 
- $scope.userModel = '';
-        $scope.models = [{name :'Honda'},{name :'BMW'}];
+
+        $scope.selectCar = function (){
+        	$scope.showSimpleToast()
+	        $scope.carSelected = true ;
+	        $scope.userCar.make = '';
+	 		$scope.userCar.model = '';
+	 		$scope.userCar.year = '';
+	 		$scope.userCar.style = '';
+	 		$scope.busSelected = false ;
+        }
+
+        $scope.selectBus = function (){
+        	$scope.showSimpleToast()
+            $scope.carSelected = false ;
+            $scope.busSelected = true ;
+        }
+        var first = true
+        $scope.$watch('userCar',function (userCar){
+        	if(first){
+        		first = !first;
+        	} else {
+
+
+  		$scope.disableRecal = true ;
+        	$scope.models = $scope.makes.filter(function (item){
+        		return item.name === userCar.make;
+        	})[0].models
+       
+        	if(userCar.model){
+        		var tempYear = $scope.models.filter(function (item){
+        		return item.name === userCar.model;
+        	})[0];
+
+        		if(tempYear){
+        		 $scope.years = tempYear.years
+        		} else {
+        		$scope.years = [];
+        		userCar.year = '';
+        		userCar.model = '';
+        		$scope.models = [];
+        		userCar.style = '';
+        		}
+        	}
+
+        	if(userCar.style){
+        	  carId = $scope.styles.filter(function (item){
+
+        			return item.name== userCar.style;
+        		})[0].id
+        	}
+
+
+			}
+        }, true)
+
+
+
+  $scope.status = '  ';
+  $scope.showAlert = function(ev) {
+
+    $mdDialog.show(
+      $mdDialog.alert()
+        .clickOutsideToClose(true)
+        .title('How This Works?')
+        .content('This Web App uses combines real time traffic data from IBEG, bus data from BRTData.org, local gas prices from myGasFeed.com, and vehicle data from Edmunds Api, and Open Street Maps to calculate the Financial assessability of São Paulo\'s transportation network. You can select your car options and compare the financial accessibility of your area for cars and buses. To interact with the map click a location in Sao Paulo to how far you can get with the money threshold you’ve selected. ')
+        .ariaLabel('Alert Dialog Demo')
+        .ok('Got it!')
+        .targetEvent(ev)
+    );
+  };
+
+ $scope.showAlert()
+
+
+        $scope.getCars = function (){
+
+			return $http.post('/api/osms/cars', $scope.userCar ).success(function(response) {
+				$scope.styles = (response.years[0].styles);
+
+		    }).error(function (){
+		    	 $scope.showSimpleToast('Error Connecting to Server!!')
+		    });
+
+
+        }
 
 
     var car = {
@@ -17,26 +111,33 @@ angular.module('costlymapApp')
     , cpm : 0 
     , tags: [{ name :'Longest Trip' , val :"134.43ml" },
      {name: "er Mile", val :  "$0.35"  }] 
-    , more : []
+    , more : [{name: "Car Make" , val : this.make } ], make : ''
 }
 $scope.okayR = true ;
 $scope.okayMin = true ;
 $scope.okayMax = true ;
 
 $scope.$watch('cost',function (cost){
+
+  	$scope.disableRecal = false ;
+
 	if(cost < 1){
 
-		$scope.okayMin = false ;
+	$scope.okayMin = false ;
+	$scope.okayR = $scope.okayMax = true ;
 
 	} else if (cost > 300){
 
-		$scope.okayMax = false ; 
+	$scope.okayMax = false ; 
+	$scope.okayR = $scope.okayMin = true ;
 
 	} else if ( cost === undefined ){
 
-		$scope.okayR = false ;
+	$scope.okayR = false ;
+	$scope.okayMin = $scope.okayMax = true ;
+
 	} else {
-		$scope.okayR = $scope.okayMin = $scope.okayMax = true ;
+	$scope.okayR = $scope.okayMin = $scope.okayMax = true ;
 	}
 })
 
@@ -45,7 +146,7 @@ $scope.$watch('cost',function (cost){
 
 
     $scope.current = car;
-    console.log($scope.current.tags[0].val)
+
 
   $scope.toastPosition = {
     bottom: false,
@@ -63,10 +164,10 @@ $scope.$watch('cost',function (cost){
   };
 
 
- $scope.showSimpleToast = function() {
+ $scope.showSimpleToast = function(text) {
     $mdToast.show(
       $mdToast.simple()
-        .content('Simple Toast!')
+        .content(text || 'Changing Network')
         .position($scope.getToastPosition())
         .hideDelay(3000)
     );
@@ -87,7 +188,8 @@ $scope.$watch('cost',function (cost){
         gridWidth: data.gridWidth,
         gridHeight: data.gridHeight,
         stepped: true,
-        min: 0
+        min: 0,
+        colorRange: ["#006837", "#39B54A", "#8CC63F", "#F7931E", "#F15A24", "#C1272D", "#C1272D", "#C1272D"].reverse()
 
         /* The color range doesn't have to be linear:
         rangeValues: [0, 25, 50, 75, 100, 125, 250, 500, 750, 2000],
@@ -135,6 +237,9 @@ $scope.$watch('cost',function (cost){
     zoom: 11
   });
 
+// Lengend 
+
+ 
   // Add the osm layer
   map.createLayer(
     'osm'
@@ -147,35 +252,190 @@ $scope.$watch('cost',function (cost){
       renderer: 'vgl'
     }
   );
- 
-
-
-// console.log(map.interactor()._disconnectEvents())
 
  var layer = map.createLayer('feature', {'renderer' : 'd3'});
 
-function getPolygons(coordinate){
-	vglLayer.clear()
-
-	$http.post('/api/osms', {coordinate: coordinate }).then(function(response) {
-
-	    var data = (response.data[0]);
-		console.log(vglLayer.visible() )
-	    var contour = makeContour(data, vglLayer);
-	  	map.draw();
-
-    });
+$scope.reCal = function (){
+	$scope.loading = true ;
+	$scope.showSimpleToast('Analyzing ' + $scope.current.type + ' Network')
+	getPolygons($scope.currentPoint[0]);
 }
 
 
-  // Legend Creation
-  var ui = map.createLayer('ui');
-      ui.createWidget('slider');
 
-vglLayer.geoOn(geo.event.mouseclick,function (data){
-	console.log(data)
+// Makes server calls to get polygon data for drawing
+ function getPolygons(coordinate){
+	vglLayer.clear()
+
+	if($scope.cost >= 1 && $scope.cost <= 8 ){
+ 	   $scope.disableRecal = true ;
+		$http.post('/api/osms', {coordinate: coordinate , id: carId, cost: $scope.cost, bus: $scope.busSelected}).success(function(response) {
+		    var data = (response[0]);
+		    var contour = makeContour(data, vglLayer);
+		    $scope.loading = false;
+		    $scope.disableRecal = true ;
+		  	map.draw();
+
+	    }).error(function (){
+	    	 $scope.showSimpleToast('Error Connecting to Server!!')
+	    });
+
+	} else {
+
+	}
+}
+
+ 	 // Legend Creation
+ 	var ui = map.createLayer('ui');
+    ui.createWidget('slider');
+
+     var legend = ui.createWidget('legend', {
+    position: {
+      right: 20,
+      top: 10
+    }
+  });
 
 
+
+$scope.$watch('cost',function (cost){
+
+// ["#006837", "#39B54A", "#8CC63F", "#F7931E", "#F15A24", "#C1272D"]
+	if(cost <= 1 ){
+		$scope.okayMin = false;
+		$scope.okayMax = true;
+		$scope.okayReq = true;
+	} else if ( cost > 8 ){
+		$scope.okayMin = true;
+		$scope.okayMax = false;
+		$scope.okayReq = true;
+	} else if( cost === undefined){
+		$scope.okayReq = true;
+		$scope.okayMin = true;
+		$scope.okayMin = false;
+	} else {
+		$scope.okayReq = true;
+		$scope.okayMin = true;
+		$scope.okayMin = true;	
+	}
+
+
+  legend.categories([
+    {
+      name: ' < $' + (cost / 5).toFixed(2),
+      style: {
+        strokeColor: "#006837",
+        strokeWidth: 10,
+        strokeOpacity: 0.75
+      },
+      type: 'line'
+    },
+    {
+      name: ' < $' + ((cost / 5)*2).toFixed(2),
+      style: {
+        strokeColor:  "#39B54A",
+        strokeWidth: 10,
+        strokeOpacity: 0.75
+      },
+      type: 'line'
+    },
+
+ {
+      name: ' < $' + ((cost / 5)*3).toFixed(2),
+      style: {
+        strokeColor:  "#8CC63F",
+        strokeWidth: 10,
+        strokeOpacity: 0.75
+      },
+      type: 'line'
+    },
+
+     {
+      name: ' < $' + ((cost / 5)*4).toFixed(2),
+      style: {
+        strokeColor:  "#F7931E",
+        strokeWidth: 10,
+        strokeOpacity: 0.75
+      },
+      type: 'line'
+    },
+
+     {
+      name: ' < $' + ((cost / 5)*5).toFixed(2),
+      style: {
+        strokeColor:  "#F15A24",
+        strokeWidth: 10,
+        strokeOpacity: 0.75
+      },
+      type: 'line'
+    }
+
+
+  ]);
+
+
+
+})
+
+ 
+$scope.currentPoint = [{
+      x:  -46.648171,
+      y: -23.539278
+    }];
+
+    var dot = layer.createFeature('point')
+    .data($scope.currentPoint)
+    .style('radius', 5)
+    .style('fillColor', function () { return 'steelblue'; })
+    .position(function (d) { return d; });
+    map.draw();
+
+
+	var circle = d3.select('.d3PointFeature')
+
+	circle.each(pulse)
+
+			function pulse() {
+				(function repeat() {
+					circle = circle.transition()
+						.duration(2000)
+						.attr("stroke-width", 0)
+						.attr("r", 5)
+						.transition()
+						.duration(100)
+						.attr('stroke-width', 0)
+						.attr("r", 20)
+						.ease('linear')
+						.each("end", repeat);
+				})();
+			}
+
+
+    // A fix so that panning doesn't cause acciedently redraw of polygons
+	var panning = false;
+	var mousedown = 0;
+	document.body.onmousedown = function (){
+		mousedown++;
+	}
+
+	document.body.onmouseup = function(){
+		mousedown--;
+	}
+
+	vglLayer.geoOn( geo.event.pan, function (){
+		panning = true;
+		if(!mousedown){
+		panning = false;
+		}
+	})
+
+	vglLayer.geoOn(geo.event.mouseclick,function (data){
+	if(panning){
+		panning = !panning ;
+	} else {
+
+	$scope.loading = true ;
+	$scope.showSimpleToast('Analyzing ' + $scope.current.type + ' Network')
     $scope.currentPoint = [{
       x:  data.geo.x,
       y: data.geo.y
@@ -186,13 +446,21 @@ vglLayer.geoOn(geo.event.mouseclick,function (data){
       y: data.geo.y
     })
 
-    var dot = layer.createFeature('point')
-    .data($scope.currentPoint)
-    .style('radius', 5)
-    .style('fillColor', function () { return 'red'; })
-    .position(function (d) { return d; });
+   dot.data($scope.currentPoint)
+   map.draw();
+
+	}
 
 })
- console.log(map)
+
+
+	$http.get('/api/osms/makes').success(function(response) {
+		$scope.makes = (response.makes);
+    }).error(function (){
+    	 $scope.showSimpleToast('Error Connecting to Server!!')
+    });
+
+
+    $scope.reCal();
 
   });
