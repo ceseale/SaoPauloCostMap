@@ -4,9 +4,6 @@
  <h3>Sao Paulo Cost Machine</h3>
       <md-button ng-click="selectCar()"class="md-raised md-primary" ng-disabled="carSelected">Car</md-button>
       <md-button ng-click="selectBus()" ng-disabled="busSelected" class="md-raised md-primary">Bus</md-button>
-
-
-
   <md-input-container id="cost">
         <label>One-Way Trip Cost (USD)</label>
         <input required type="number" step=".01" name="rate" ng-model="cost">
@@ -16,18 +13,11 @@
           <div ng-hide="okayMax" ng-message="max">With ${{cost}} you can leave the city!!</div>
         </div>
       </md-input-container>
-
-
-
-
     <div   class="box" flex="50" flex-md="100" layout="column">
       <fieldset ng-hide="busSelected" class="standard" flex>
         <legend> {{current.type}} Options </legend>
         <div layout="row" layout-wrap>
-
-
           <div flex="50" >
-
       <label>Vehicle Make</label>
         <md-select ng-model="userCar.make">
           <md-option ng-repeat="make in makes">{{make.name}}</md-option>
@@ -49,7 +39,7 @@
 
           </div>
 
-                   <div flex="50" >
+      <div flex="50" >
         <md-tooltip ng-hide="userCar.model">
           You need to select a Car Model First!
         </md-tooltip>
@@ -58,7 +48,6 @@
           <md-option ng-repeat="year in years" value="{{year.year}}">{{year.year}}</md-option>
         </md-select>
 </div>
-
     <div flex="50" >
         <md-tooltip ng-hide="userCar.year">
           You need to select a Car Year First!
@@ -68,30 +57,12 @@
           <md-option ng-repeat="style in styles" value="{{style.name}}">{{style.name | limitTo : '32'}}...</md-option>
         </md-select>
           </div>
-
-
         </div>
-
-
-
       </fieldset>
-
-
         <md-button ng-click="reCal()"class="md-raised md-primary" ng-disabled="disableRecal">Recalculate Distance Costs</md-button>
-
-
         <md-button ng-click="showAlert()"class="md-raised md-primary" >How this Works</md-button>
     </div>
-
-
-
-
-
-
   </md-whiteframe>
-
-
-
  <div id="map"></div>
 
     <md-progress-circular ng-show="loading" id="loading" md-mode="indeterminate" ></md-progress-circular>
